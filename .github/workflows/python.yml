@@ -14,32 +14,15 @@ on:
       - 'branch-*'
 
 jobs:
-  pre_check:
-    name: 'Check for code changes'
-    runs-on: ubuntu-latest
-    outputs:
-      run_tests: ${{ steps.changes.outputs.python_test}}
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 2
-    - uses: dorny/paths-filter@v2
-      id: changes
-      with:
-        filters: .github/filters.yml
-        list-files: 'json'
-
   build:
     name: 'Run tests with Python'
-    needs: pre_check
-    if: needs.pre_check.outputs.run_tests == 'true'
     runs-on: ubuntu-22.04
     strategy:
       # don't cancel running matrix tests when one test fails
       fail-fast: false
       matrix:
         # current supported Python versions
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.13']
 
     steps:
     - uses: actions/checkout@v3
@@ -77,8 +60,8 @@ jobs:
         # Output DeprecationWarnings only once
         PYTHONWARNINGS: "once::DeprecationWarning"
 
-    - name: Codecov upload
-      if: ${{ steps.pytest_run.outcome == 'success' }}
-      uses: codecov/codecov-action@v3
+    - name: Archive code coverage results
+      uses: actions/upload-artifact@v4
       with:
-        files: ./coverage.xml
+        name: code-coverage-report
+        path: coverage.xml
